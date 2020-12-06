@@ -31,11 +31,10 @@ import javax.ws.rs.core.Response.Status;
 public class BookWS {
 
     private final BookDAO dao = BookDAO.getInstance();
-
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Book> getBooks() {
-        return dao.retrieveAllBooks();
+    public Response getBooks() {
+       return Response.ok().entity(dao.retrieveAllBooks()).build();
     }
     
     @GET

@@ -6,6 +6,8 @@
 package bangnn.main;
 
 import javax.ws.rs.ApplicationPath;
+
+import bangnn.book.filters.JWTAuthenticationFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**
@@ -17,6 +19,7 @@ public class ApplicationConfig extends ResourceConfig {
 
     public ApplicationConfig() {
         packages("bangnn.book.ws");
+        register(JWTAuthenticationFilter.class);
     }
 
 }

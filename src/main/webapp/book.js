@@ -4,99 +4,146 @@
 
 const END_POINT = 'api/v1/books/';
 
+var isbn, title, author, edition, pubYear;
+var updateISBN, updateTitle, updateAuthor, updateEdition, updatePubYear;
+
+
+//Initialize variables
+const initializeVariables = () => {
+    isbn = document.getElementById("inputISBN");
+    title = document.getElementById("inputTitle");
+    author = document.getElementById("inputAuthor");
+    edition = document.getElementById("inputEdition");
+    pubYear = document.getElementById("inputPubYear");
+}
+
+const initializeInputUpdateVariables = () => {
+    updateISBN = document.getElementById("inputUpdateISBN");
+    updateTitle = document.getElementById("inputUpdateTitle");
+    updateAuthor = document.getElementById("inputUpdateAuthor");
+    updateEdition = document.getElementById("inputUpdateEdition");
+    updatePubYear = document.getElementById("inputUpdatePubYear");
+}
+
+window.addEventListener('load', initializeVariables);
+
+
 function clearInput() {
-    document.getElementById("inputISBN").value = "";
-    document.getElementById("inputTitle").value = "";
-    document.getElementById("inputAuthor").value = "";
-    document.getElementById("inputEdition").value = "";
-    document.getElementById("inputPubYear").value = "";
+    isbn.value = "";
+    title.value = "";
+    author.value = "";
+    edition.value = "";
+    pubYear.value = "";
 }
 
 function parseBookToJSONUpdate() {
-    let isbn = document.getElementById("inputUpdateISBN").value;
-    let title = document.getElementById("inputUpdateTitle").value;
-    let author = document.getElementById("inputUpdateAuthor").value;
-    let edition = document.getElementById("inputUpdateEdition").value;
-    let publishYear = document.getElementById("inputUpdatePubYear").value;
     return `{
-        "isbn": "` + isbn + `",
-        "title": "` + title + `",
-        "author": "` + author + `",
-        "edition": "` + edition + `",
-        "publishYear": "` + publishYear + `"
+        "isbn": "${updateISBN.value}",
+        "title": "${updateTitle.value}",
+        "author": "${updateAuthor.value}",
+        "edition": "${updateEdition.value}",
+        "publishYear": "${updatePubYear.value}"
     }`;
 }
 
 function parseBookToJSONInsert() {
-    let isbn = document.getElementById("inputISBN").value;
-    let title = document.getElementById("inputTitle").value;
-    let author = document.getElementById("inputAuthor").value;
-    let edition = document.getElementById("inputEdition").value;
-    let publishYear = document.getElementById("inputPubYear").value;
     return `{
-        "isbn": "` + isbn + `",
-        "title": "` + title + `",
-        "author": "` + author + `",
-        "edition": "` + edition + `",
-        "publishYear": "` + publishYear + `"
+        "isbn": "${document.getElementById("inputISBN").value}",
+        "title": "${document.getElementById("inputTitle").value}",
+        "author": "${document.getElementById("inputAuthor").value}",
+        "edition": "${document.getElementById("inputEdition").value}",
+        "publishYear": "${document.getElementById("inputPubYear").value}"
     }`;
 }
 
 function confirmUpDel() {
-    let val = document.getElementById("chkConfirm").checked;
-    if (val === false) {
+    return document.getElementById("chkConfirm").checked ? true : () => {
         alert("Please tick the checkbox before doing this action!");
         return false;
-    }
-    return true;
+    };
 }
 
-function createBook() {
-    fetch(END_POINT, {
+async function createBook() {
+    const response = await fetch(END_POINT, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': window.localStorage.getItem("tokenId")
         },
         body: parseBookToJSONInsert()
-    })
-            .then(res => res.json())
-            .then(res => {
-                clearInput();
-                document.getElementById("createStatus").innerHTML = `<h3><font color="green">` + res.status + `</font></h3>`;
-            })
-            .catch(err => {
-                document.getElementById("createStatus").innerHTML = `<h3><font color="red">` + err.status + `</font></h3>`;
-            });
+    });
+    if (response.status === 401) {
+        window.localStorage.removeItem("tokenId");
+        loadLoginPage()
+    } else if (response.status === 200) {
+        clearInput();
+        response.json().then((res) => {
+            window.localStorage.setItem("tokenId", response.headers.get("Authorization"));
+            document.getElementById("createStatus").innerHTML = `<h3><font color="green">${res.status}</font></h3>`;
+        });
+    } else {
+        response.json().then((res) => {
+            window.localStorage.setItem("tokenId", response.headers.get("Authorization"));
+            document.getElementById("createStatus").innerHTML = `<h3><font color="red">${res.status}</font></h3>`;
+        });
+    }
 }
 
-function updateBook() {
-    if (confirmUpDel()) {
-        let isbn = document.getElementById("inputUpdateISBN").value;
-        if (isbn !== undefined && isbn.length > 0) {
-            fetch(String(END_POINT + isbn), {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: parseBookToJSONUpdate()
-            })
-                    .then(res => res.json())
-                    .then(res => document.getElementById("book").innerHTML = `<h3><font color="green">` + res.status + `</font></h3>`)
-                    .catch(err => document.getElementById("status").innerHTML = `<h3><font color="red">` + err.status + `</font></h3>`);
+async function updateBook() {
+    if (confirmUpDel() && updateISBN.value !== undefined && updateISBN.value.length > 0) {
+        const updateBookUrl = END_POINT + updateISBN.value;
+        const response = await fetch(updateBookUrl, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': window.localStorage.getItem("tokenId")
+            },
+            body: parseBookToJSONUpdate()
+        });
+        if (response.status === 401) {
+            window.localStorage.removeItem("tokenId");
+            loadLoginPage()
+        } else if (response.status === 200) {
+            window.localStorage.setItem("tokenId", response.headers.get("Authorization"));
+            response.json().then((res) => {
+                document.getElementById("book").innerHTML = `<h3><font color="green">${res.status}</font></h3>`;
+            });
+        } else {
+            window.localStorage.setItem("tokenId", response.headers.get("Authorization"));
+            response.json().then((res) => {
+                document.getElementById("status").innerHTML = `<h3><font color="red">${res.status}</font></h3>`
+            });
         }
     }
 }
 
-function deleteBook() {
+async function deleteBook() {
     if (confirmUpDel()) {
-        let isbn = document.getElementById("inputUpdateISBN").value;
-        if (isbn !== undefined && isbn.length > 0) {
-            fetch(String(END_POINT + isbn), {
-                method: 'DELETE'
-            })
-                    .then(res => res.json())
-                    .then(res => document.getElementById("book").innerHTML = `<h3><font color="green">` + res.status + `</font></h3>`)
-                    .catch(err => document.getElementById("status").innerHTML = `<h3><font color="red">` + err.status + `</font></h3>`);
+        if (updateISBN.value !== undefined && updateISBN.value.length > 0) {
+            const deleteUrl = END_POINT + updateISBN.value;
+            const response = await fetch(deleteUrl, {
+                headers: {
+                    'Authorization': window.localStorage.getItem("tokenId")
+                }, method: 'DELETE'
+            });
+            switch (response.status) {
+                case 401:
+                    window.localStorage.removeItem("tokenId");
+                    loadLoginPage()
+                    break;
+                case 200:
+                    window.localStorage.setItem("tokenId", response.headers.get("Authorization"));
+                    response.json().then((res) => {
+                        document.getElementById("book").innerHTML = `<h3><font color="green">${res.status}</font></h3>`;
+                    });
+                    break;
+                default:
+                    window.localStorage.setItem("tokenId", response.headers.get("Authorization"));
+                    response.json().then((res) => {
+                        document.getElementById("status").innerHTML = `<h3><font color="red">${res.status}</font></h3>`;
+                    });
+                    break;
+            }
         }
     }
 }
@@ -110,8 +157,8 @@ function parseBooksToTable(books) {
         document.getElementById("searchStatus").innerHTML = `<h3><font color="red">No record found!</font></h3>`;
         return;
     }
-    var counter = 0;
-    var htmlRes = `
+    let counter = 0;
+    let htmlRes = `
         <table border="1">
         <thead>
             <tr>
@@ -127,12 +174,12 @@ function parseBooksToTable(books) {
     books.forEach(book => {
         htmlRes += `
                 <tr>
-                    <td>` + (++counter) + `</td>
-                    <td>` + book.isbn + `</td>
-                    <td>` + book.title + `</td>
-                    <td>` + book.author + `</td>
-                    <td>` + book.edition + `</td>
-                    <td>` + book.publishYear + `</td>
+                    <td>${(++counter)}</td>
+                    <td>${book.isbn}</td>
+                    <td>${book.title}</td>
+                    <td>${book.author}</td>
+                    <td>${book.edition}</td>
+                    <td>${book.publishYear}</td>
                 </tr>
         `;
     });
@@ -142,24 +189,44 @@ function parseBooksToTable(books) {
     document.getElementById("searchStatus").innerHTML = htmlRes;
 }
 
-function getBookByLikeName() {
+async function getBookByLikeName() {
     let title = document.getElementById("name").value;
+    const getBookByLikeNameUrl = END_POINT + "likeName?title=" + title;
+    const response = await fetch(getBookByLikeNameUrl, {
+        headers: {
+            'Authorization': window.localStorage.getItem("tokenId")
+        }
+    })
 
-    fetch(String(END_POINT + "likeName?title=" + title))
-            .then(res => res.json())
-            .then(res => parseBooksToTable(res))
-            .catch(err => raiseGetBooksByLikeNameError());
+    if (response.status === 401) {
+        window.localStorage.removeItem("tokenId");
+        loadLoginPage();
+    } else if (response.status === 200) {
+        response.json().then((res) => parseBooksToTable(res));
+    } else {
+        raiseGetBooksByLikeNameError();
+    }
 }
 
-function getBookThenParse() {
-    let isbn = document.getElementById("isbn").value;
-    if (isbn !== undefined && isbn.length > 0) {
-        fetch(String(END_POINT + isbn), {
-            method: 'GET'
-        })
-                .then(res => res.json())
-                .then(res => parseBook(res))
-                .catch(err => raiseGetBookError());
+async function getBookThenParse() {
+    let searchISBN = document.getElementById("isbn").value;
+    if (searchISBN !== undefined && searchISBN.length > 0) {
+        const searchISBNUrl = END_POINT + searchISBN;
+        const response = await fetch(searchISBNUrl, {
+            headers: {
+                'Authorization': window.localStorage.getItem("tokenId")
+            },
+            method: "GET"
+        });
+        if (response.status === 401) {
+            window.localStorage.removeItem("tokenId");
+            loadLoginPage();
+        } else if (response.status === 200) {
+            response.json().then((res) => parseBook(res));
+        } else {
+            raiseGetBooksByLikeNameError()
+        }
+
     } else {
         raiseRequireISBNError();
     }
@@ -179,29 +246,34 @@ function parseBook(book) {
             <tbody>
                 <tr>
                     <td><b>ISBN</b></td>
-                    <td><input value="` + book.isbn + `" id="inputUpdateISBN" readonly/></td>
+                    <td><input value="${book.isbn}" id="inputUpdateISBN" readonly/></td>
                 </tr>
                 <tr>
                     <td><b>Title</b></td>
-                    <td><input value="` + book.title + `" id="inputUpdateTitle"/></td>
+                    <td><input value="${book.title}" id="inputUpdateTitle"/></td>
                 </tr>
                 <tr>
                     <td><b>Author</b></td>
-                    <td><input value="` + book.author + `" id="inputUpdateAuthor"/></td>
+                    <td><input value="${book.author}" id="inputUpdateAuthor"/></td>
                 </tr>
                 <tr>
                     <td><b>Edition</b></td>
-                    <td><input type="number" min="1" max="1000" value="` + book.edition + `" id="inputUpdateEdition"></td>
+                    <td><input type="number" min="1" max="1000" value="${book.edition}" id="inputUpdateEdition"></td>
                 </tr>
                 <tr>
                     <td><b>Publish Year</b></td>
-                    <td><input type="number" min="1000" max="2020" value="` + book.publishYear + `" id="inputUpdatePubYear"/></td>
+                    <td><input type="number" min="1000" max="2020" value="${book.publishYear}" id="inputUpdatePubYear"/></td>
                 </tr>
             </tbody>
         </table><br/>
-        <input type="button" onclick="updateBook()" value="Update this book"/>
-        <input type="button" onclick="deleteBook()" value="Delete this book"/><br/><br/>
+        <button id="updateBookBtn">Update this book</button>
+        <button id="deleteBookBtn">Delete this book</button><br/><br/>
         <input type="checkbox" id="chkConfirm"/> I confirm that I want to update/delete this book.<br/>
         <div id="status"></div>`;
+    initializeInputUpdateVariables();
+    //Add onclick event listener
+    document.getElementById("updateBookBtn").addEventListener('click', updateBook);
+    document.getElementById("deleteBookBtn").addEventListener('click', deleteBook);
 }
+
 
