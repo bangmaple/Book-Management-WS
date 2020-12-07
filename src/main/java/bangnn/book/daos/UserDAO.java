@@ -9,10 +9,13 @@ import java.sql.SQLException;
 
 public class UserDAO {
     private static UserDAO INSTANCE = null;
-
+    private Connection conn;
+    private PreparedStatement prStm;
+    private ResultSet rs;
     private UserDAO() {
 
     }
+
     public static UserDAO getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new UserDAO();
@@ -20,19 +23,15 @@ public class UserDAO {
         return INSTANCE;
     }
 
-    private Connection conn;
-    private PreparedStatement prStm;
-    private ResultSet rs;
-
     private void closeConnection() throws SQLException {
-        if (rs !=null) {
+        if (rs != null) {
             rs.close();
         }
-        if (prStm!=null) {
+        if (prStm != null) {
             prStm.close();
         }
 
-        if (conn!=null) {
+        if (conn != null) {
             conn.close();
         }
     }
@@ -94,7 +93,7 @@ public class UserDAO {
     public void setLoggedIn(String username) {
         try {
             conn = DBUtils.getBookWSConnection();
-            if (conn!=null) {
+            if (conn != null) {
                 String sql = "UPDATE Users SET IsLoggedIn = 1 WHERE Username = ?";
                 prStm = conn.prepareStatement(sql);
                 prStm.setString(1, username);
@@ -119,7 +118,7 @@ public class UserDAO {
         boolean check = false;
         try {
             conn = DBUtils.getBookWSConnection();
-            if (conn!=null) {
+            if (conn != null) {
                 String sql = "SELECT * FROM Users WHERE Username = ? AND Password = ?";
                 prStm = conn.prepareStatement(sql);
                 prStm.setString(1, username);

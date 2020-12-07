@@ -5,13 +5,12 @@
  */
 package bangnn.main;
 
-import javax.ws.rs.ApplicationPath;
-
 import bangnn.book.filters.JWTAuthenticationFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 
+import javax.ws.rs.ApplicationPath;
+
 /**
- *
  * @author bangmaple
  */
 @ApplicationPath("api")

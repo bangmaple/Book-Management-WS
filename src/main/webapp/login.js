@@ -1,5 +1,3 @@
-
-
 function isLoggedIn() {
     let token = window.localStorage.getItem("tokenId");
     console.log(token);

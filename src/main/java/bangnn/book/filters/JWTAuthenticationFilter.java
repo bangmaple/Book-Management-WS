@@ -3,7 +3,6 @@ package bangnn.book.filters;
 
 import bangnn.book.daos.UserDAO;
 import bangnn.main.JWTUtil;
-import org.glassfish.jersey.server.spi.Container;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -22,11 +21,9 @@ public class JWTAuthenticationFilter implements ContainerRequestFilter, Containe
 
     private static final String USER_WS_END_POINT = "api/v1/users";
     private static final List<String> END_POINTS = Arrays.asList("api/v1/books", "api/v1/users");
-
+    private final UserDAO dao = UserDAO.getInstance();
     @Context
     private UriInfo uriInfo;
-
-    private final UserDAO dao = UserDAO.getInstance();
 
     @Override
     public void filter(ContainerRequestContext ctx) throws IOException {

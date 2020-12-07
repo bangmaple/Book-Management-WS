@@ -27,7 +27,7 @@ public class UserWS {
             dao.setLoggedIn(u.getUsername());
             node.put("message", "success");
             String token = JWTUtil.generateToken(u.getUsername());
-                return Response.ok().header("Authorization", token).entity(node).build();
+            return Response.ok().header("Authorization", token).entity(node).build();
         } else {
             node.put("message", "failed");
             return Response.status(Response.Status.UNAUTHORIZED).entity(node).build();
@@ -41,11 +41,11 @@ public class UserWS {
         String token = headers.getHeaderString("Authorization");
         if (token != null) {
             String username = JWTUtil.getUsernameFromJWT(token);
-                if (dao.revokeUser(username)) {
-                    return Response.ok().build();
-                } else {
-                    return Response.status(Response.Status.NOT_ACCEPTABLE).build();
-                }
+            if (dao.revokeUser(username)) {
+                return Response.ok().build();
+            } else {
+                return Response.status(Response.Status.NOT_ACCEPTABLE).build();
+            }
         } else {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }

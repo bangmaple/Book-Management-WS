@@ -7,6 +7,7 @@ package bangnn.book.daos;
 
 import bangnn.book.models.Book;
 import bangnn.main.DBUtils;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,13 +16,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- *
  * @author bangmaple
  */
 public class BookDAO {
 
     private static BookDAO INSTANCE;
-
+    private Connection conn;
+    private PreparedStatement prStm;
+    private ResultSet rs;
     private BookDAO() {
     }
 
@@ -31,9 +33,6 @@ public class BookDAO {
         }
         return INSTANCE;
     }
-    private Connection conn;
-    private PreparedStatement prStm;
-    private ResultSet rs;
 
     private void closeConnection() {
         try {
@@ -50,6 +49,7 @@ public class BookDAO {
             e.printStackTrace();
         }
     }
+
 
     public boolean insertToDB(Book b) {
         boolean check = false;
@@ -138,6 +138,31 @@ public class BookDAO {
             String sql = "SELECT * FROM Book";
             conn = DBUtils.getBookWSConnection();
             prStm = conn.prepareStatement(sql);
+            rs = prStm.executeQuery();
+            list = new LinkedList<>();
+            while (rs.next()) {
+                list.add(new Book(rs.getString("Isbn"),
+                        rs.getString("Title"),
+                        rs.getString("Author"),
+                        rs.getInt("Edition"),
+                        rs.getInt("PublishYear")));
+            }
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeConnection();
+        }
+        return list;
+    }
+
+    public List<Book> retrieveBooksPagination(int start, int end) {
+        List<Book> list = null;
+        try {
+            String sql = "SELECT * FROM Book ORDER BY ISBN OFFSET ? ROWS FETCH NEXT ? ROWS ONLY;";
+            conn = DBUtils.getBookWSConnection();
+            prStm = conn.prepareStatement(sql);
+            prStm.setInt(1, start);
+            prStm.setInt(2, end);
             rs = prStm.executeQuery();
             list = new LinkedList<>();
             while (rs.next()) {

@@ -6,7 +6,6 @@
 package bangnn.book.models;
 
 /**
- *
  * @author bangmaple
  */
 
@@ -72,11 +71,11 @@ public class Book {
     public void setPublishYear(Integer publishYear) {
         this.publishYear = publishYear;
     }
-    
+
 
     @Override
     public String toString() {
         return "Book{" + "isbn=" + isbn + ", title=" + title + ", author=" + author + ", edition=" + edition + '}';
     }
-    
+
 }

@@ -9,34 +9,44 @@ import bangnn.book.daos.BookDAO;
 import bangnn.book.models.Book;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.util.List;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.PATCH;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import java.util.List;
 
 /**
- *
  * @author bangmaple
  */
 @Path("v1/books")
 public class BookWS {
 
     private final BookDAO dao = BookDAO.getInstance();
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getBooks() {
-       return Response.ok().entity(dao.retrieveAllBooks()).build();
+        return Response.ok().entity(dao.retrieveAllBooks()).build();
     }
-    
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{start}/{end}")
+    public Response getBooksPaginationOffset(@PathParam("start") int start, @PathParam("end") int end) {
+        return Response.ok().entity(dao.retrieveBooksPagination(start, end)).build();
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("page/{pageNum}")
+    public Response getBooksPaginationOffset(@PathParam("pageNum") int pageNum) {
+        int BOOKS_PER_PAGE = 5;
+        int start = pageNum * BOOKS_PER_PAGE;
+        int end = start + BOOKS_PER_PAGE;
+        return Response.ok().entity(dao.retrieveBooksPagination(start, end)).build();
+    }
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("likeName")
